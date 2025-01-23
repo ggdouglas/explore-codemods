@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "test": "jest",
+    "clean": "rm -rf dist",
+    "test": "jest --watchAll",
     "codemod": "jscodeshift"
   },
   "dependencies": {

@@ -13,3 +13,22 @@ function ExampleC() {
   return <Button>test</Button>;
 }
 
+function ExampleD() {
+  return <Button size="large">test</Button>;
+}
+
+function ExampleE() {
+  return <Button size="large">test</Button>;
+}
+
+function ExampleF() {
+  return <Button>test</Button>;
+}
+
+function ExampleG() {
+  return <Button>test</Button>;
+}
+
+function ExampleH() {
+  return <Button size="small" size="large">test</Button>;
+}
