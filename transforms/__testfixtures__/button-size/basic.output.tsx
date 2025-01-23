@@ -30,5 +30,5 @@ function ExampleG() {
 }
 
 function ExampleH() {
-  return <Button size="small" size="large">test</Button>;
+  return <Button size="small">test</Button>;
 }
