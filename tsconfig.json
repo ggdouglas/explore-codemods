@@ -6,9 +6,8 @@
     "target": "esnext",
     "strict": false,
     "jsx": "preserve",
-    "lib": ["es2017"],
     "outDir": "dist",
     "skipLibCheck": true
   },
-  "exclude": ["transforms/__testfixtures__/**"]
+  "exclude": ["transforms/__tests__/**", "transforms/__testfixtures__/**"]
 }
