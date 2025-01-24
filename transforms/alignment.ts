@@ -25,6 +25,7 @@
 import {
   API,
   ASTPath,
+  Collection,
   FileInfo,
   JSCodeshift,
   JSXAttribute,
@@ -37,116 +38,96 @@ export default function transformer(file: FileInfo, api: API) {
   const j = api.jscodeshift;
   const root = j(file.source);
 
-  /**
-   * Change the following:
-   * <NavbarGroup align={Alignment.LEFT} />
-   * <NavbarGroup align={Alignment.RIGHT} />
-   * <NavbarGroup align={Alignment.CENTER} />
-   *
-   * to:
-   * <NavbarGroup align={Alignment.START} />
-   * <NavbarGroup align={Alignment.END} />
-   * <NavbarGroup />
-   */
-
   const navbarGroups = root.findJSXElements("NavbarGroup");
 
-  const alignProps = navbarGroups.find(j.JSXAttribute, {
-    name: { name: "align" },
-    value: {
-      type: "JSXExpressionContainer",
-      expression: {
-        type: "MemberExpression",
-        object: { name: "Alignment" },
-      },
-    },
-  });
-
-  alignProps.forEach((path) => {
-    const attributeValue = path.value.value;
-    if (attributeValue.type === "JSXExpressionContainer") {
-      const { expression } = attributeValue;
-      if (expression.type === "MemberExpression") {
-        const { property } = expression;
-        if (property.type === "Identifier") {
-          const { name } = property;
-          if (name === "LEFT") {
-            property.name = "START";
-          } else if (name === "RIGHT") {
-            property.name = "END";
-          } else if (name === "CENTER") {
-            j(path).remove();
-          }
-        }
-      }
-    }
-  });
-
-  /**
-   * Change the following:
-   * <NavbarGroup align="left" />
-   * <NavbarGroup align="right" />
-   * <NavbarGroup align="center" />
-   *
-   * to:
-   * <NavbarGroup align="start" />
-   * <NavbarGroup align="end" />
-   * <NavbarGroup />
-   */
-
-  const stringAlignProps = navbarGroups.find(j.JSXAttribute, {
-    name: { name: "align" },
-    value: { type: "StringLiteral" },
-  });
-
-  stringAlignProps.forEach((path) => {
-    const attributeValue = path.value.value;
-    if (attributeValue.type === "StringLiteral") {
-      const { value } = attributeValue;
-      if (value === "left") {
-        path.value.value = j.stringLiteral("start");
-      } else if (value === "right") {
-        path.value.value = j.stringLiteral("end");
-      } else if (value === "center") {
-        j(path).remove();
-      }
-    }
-  });
-
-  /**
-   * Change the following:
-   * <NavbarGroup align={"left"} />
-   * <NavbarGroup align={"right"} />
-   * <NavbarGroup align={"center"} />
-   *
-   * to:
-   * <NavbarGroup align={"start"} />
-   * <NavbarGroup align={"end"} />
-   * <NavbarGroup />
-   */
-
-  const stringAlignProps2 = navbarGroups.find(j.JSXAttribute, {
-    name: { name: "align" },
-    value: { type: "JSXExpressionContainer" },
-  });
-
-  stringAlignProps2.forEach((path) => {
-    const attributeValue = path.value.value;
-
-    if (attributeValue.type === "JSXExpressionContainer") {
-      const { expression } = attributeValue;
-      if (expression.type === "StringLiteral") {
-        const { value } = expression;
-        if (value === "left") {
-          expression.value = "start";
-        } else if (value === "right") {
-          expression.value = "end";
-        } else if (value === "center") {
-          j(path).remove();
-        }
-      }
-    }
-  });
+  processNavbarGroups(j, navbarGroups);
 
   return root.toSource();
+}
+
+/**
+ * Change the following:
+ * <NavbarGroup align={Alignment.LEFT} />
+ * <NavbarGroup align={Alignment.RIGHT} />
+ * <NavbarGroup align={Alignment.CENTER} />
+ * <NavbarGroup align="left" />
+ * <NavbarGroup align="right" />
+ * <NavbarGroup align="center" />
+ * <NavbarGroup align={"left"} />
+ * <NavbarGroup align={"right"} />
+ * <NavbarGroup align={"center"} />
+ *
+ * to:
+ * <NavbarGroup align={Alignment.START} />
+ * <NavbarGroup align={Alignment.END} />
+ * <NavbarGroup />
+ * <NavbarGroup align="start" />
+ * <NavbarGroup align="end" />
+ * <NavbarGroup />
+ * <NavbarGroup align={"start"} />
+ * <NavbarGroup align={"end"} />
+ * <NavbarGroup />
+ */
+function processNavbarGroups(
+  j: JSCodeshift,
+  navbarGroups: Collection<JSXElement>
+) {
+  const alignAttributes = navbarGroups.find(j.JSXAttribute, {
+    name: { name: "align" },
+  });
+
+  alignAttributes.forEach((path) => {
+    const attributeValue = path.value.value;
+    // Handle JSX attributes that contain expressions like {Alignment.LEFT} or {"left"}
+    if (attributeValue.type === "JSXExpressionContainer") {
+      const { expression } = attributeValue;
+
+      // Handle member expressions like Alignment.LEFT
+      if (expression.type === "MemberExpression") {
+        const { property } = expression;
+        // Convert identifier names (LEFT/RIGHT/CENTER) to START/END
+        if (property.type === "Identifier") {
+          convertAlignmentMember(j, path, property);
+        }
+      }
+
+      // Handle string literals wrapped in curly braces like {"left"}
+      if (expression.type === "StringLiteral") {
+        convertAlignmentString(j, path, expression);
+      }
+      // Handle direct string literals like align="left"
+    } else if (attributeValue.type === "StringLiteral") {
+      convertAlignmentString(j, path, attributeValue);
+    }
+  });
+}
+
+function convertAlignmentMember(
+  j: JSCodeshift,
+  path: ASTPath,
+  property: { name: string }
+) {
+  const { name } = property;
+  if (name === "LEFT") {
+    property.name = "START";
+  } else if (name === "RIGHT") {
+    property.name = "END";
+  } else if (name === "CENTER") {
+    j(path).remove();
+  }
+}
+
+function convertAlignmentString(
+  j: JSCodeshift,
+  path: ASTPath,
+  expression: { value: string }
+) {
+  const { value } = expression;
+  if (value === "left") {
+    expression.value = "start";
+  } else if (value === "right") {
+    expression.value = "end";
+  } else if (value === "center") {
+    j(path).remove();
+  }
 }
