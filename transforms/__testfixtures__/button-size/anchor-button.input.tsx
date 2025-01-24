@@ -32,3 +32,13 @@ function ExampleG() {
 function ExampleH() {
   return <AnchorButton small={true} large={true}>test</AnchorButton>;
 }
+
+function ExampleI() {
+  const isSmall = true;
+  return <AnchorButton size={isSmall ? "small" : undefined}>test</AnchorButton>;
+}
+
+function ExampleJ() {
+  const isLarge = true;
+  return <AnchorButton size={isLarge ? "large" : undefined}>test</AnchorButton>;
+}

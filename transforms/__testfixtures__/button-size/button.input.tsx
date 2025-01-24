@@ -32,3 +32,13 @@ function ExampleG() {
 function ExampleH() {
   return <Button small={true} large={true}>test</Button>;
 }
+
+function ExampleI() {
+  const isSmall = true;
+  return <Button small={isSmall}>test</Button>;
+}
+
+function ExampleJ() {
+  const isLarge = true;
+  return <Button large={isLarge}>test</Button>;
+}
