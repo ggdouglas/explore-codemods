@@ -3,7 +3,7 @@ jest.autoMockOff();
 import { defineTest } from "jscodeshift/dist/testUtils";
 
 const name = "button-size";
-const fixtures = ["basic"] as const;
+const fixtures = ["anchor-button", "button"] as const;
 
 describe(name, () => {
   fixtures.forEach((test) =>

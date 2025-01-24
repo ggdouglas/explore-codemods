@@ -12,26 +12,30 @@ export default function transformer(file: FileInfo, api: API) {
   const root = j(file.source);
 
   const buttons = root.findJSXElements("Button");
+  const anchorButtons = root.findJSXElements("AnchorButton");
 
-  buttons.forEach((path) => {
-    const smallAttr = findAttribute(j, path, "small");
-    const largeAttr = findAttribute(j, path, "large");
-
-    // Both attributes exist - handle conflict, prioritize "small" over "large"
-    if (smallAttr.length > 0 && largeAttr.length > 0) {
-      transformToSizeAttribute(j, smallAttr.get(), "small");
-      j(largeAttr.get()).remove();
-      return;
-    }
-    // Only one attribute exists - handle it
-    if (smallAttr.length > 0) {
-      transformToSizeAttribute(j, smallAttr.get(), "small");
-    } else if (largeAttr.length > 0) {
-      transformToSizeAttribute(j, largeAttr.get(), "large");
-    }
-  });
+  buttons.forEach((path) => transformButton(j, path));
+  anchorButtons.forEach((path) => transformButton(j, path));
 
   return root.toSource();
+}
+
+function transformButton(j: JSCodeshift, path: ASTPath<JSXElement>) {
+  const smallAttr = findAttribute(j, path, "small");
+  const largeAttr = findAttribute(j, path, "large");
+
+  // Both attributes exist - handle conflict, prioritize "small" over "large"
+  if (smallAttr.length > 0 && largeAttr.length > 0) {
+    transformToSizeAttribute(j, smallAttr.get(), "small");
+    j(largeAttr.get()).remove();
+    return;
+  }
+  // Only one attribute exists - handle it
+  if (smallAttr.length > 0) {
+    transformToSizeAttribute(j, smallAttr.get(), "small");
+  } else if (largeAttr.length > 0) {
+    transformToSizeAttribute(j, largeAttr.get(), "large");
+  }
 }
 
 function findAttribute(
