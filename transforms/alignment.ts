@@ -38,68 +38,70 @@ export default function transformer(file: FileInfo, api: API) {
   const j = api.jscodeshift;
   const root = j(file.source);
 
-  const navbarGroups = root.findJSXElements("NavbarGroup");
+  const checkboxes = root.findJSXElements("Checkbox");
+  processAlignIndicator(j, checkboxes);
 
-  processNavbarGroups(j, navbarGroups);
+  const checkboxCards = root.findJSXElements("CheckboxCard");
+  processAlignIndicator(j, checkboxCards);
+
+  const radios = root.findJSXElements("Radio");
+  processAlignIndicator(j, radios);
+
+  const radioCards = root.findJSXElements("RadioCard");
+  processAlignIndicator(j, radioCards);
+
+  const switches = root.findJSXElements("Switch");
+  processAlignIndicator(j, switches);
+
+  const switchCards = root.findJSXElements("SwitchCard");
+  processAlignIndicator(j, switchCards);
+
+  const navbarGroups = root.findJSXElements("NavbarGroup");
+  processAlign(j, navbarGroups);
 
   return root.toSource();
 }
 
-/**
- * Change the following:
- * <NavbarGroup align={Alignment.LEFT} />
- * <NavbarGroup align={Alignment.RIGHT} />
- * <NavbarGroup align={Alignment.CENTER} />
- * <NavbarGroup align="left" />
- * <NavbarGroup align="right" />
- * <NavbarGroup align="center" />
- * <NavbarGroup align={"left"} />
- * <NavbarGroup align={"right"} />
- * <NavbarGroup align={"center"} />
- *
- * to:
- * <NavbarGroup align={Alignment.START} />
- * <NavbarGroup align={Alignment.END} />
- * <NavbarGroup />
- * <NavbarGroup align="start" />
- * <NavbarGroup align="end" />
- * <NavbarGroup />
- * <NavbarGroup align={"start"} />
- * <NavbarGroup align={"end"} />
- * <NavbarGroup />
- */
-function processNavbarGroups(
+function processAlignIndicator(
   j: JSCodeshift,
-  navbarGroups: Collection<JSXElement>
+  collection: Collection<JSXElement>
 ) {
-  const alignAttributes = navbarGroups.find(j.JSXAttribute, {
+  const alignIndicatorAttributes = collection.find(j.JSXAttribute, {
+    name: { name: "alignIndicator" },
+  });
+  alignIndicatorAttributes.forEach((path) => handleAlignmentAttribute(j, path));
+}
+
+function processAlign(j: JSCodeshift, collection: Collection<JSXElement>) {
+  const alignAttributes = collection.find(j.JSXAttribute, {
     name: { name: "align" },
   });
+  alignAttributes.forEach((path) => handleAlignmentAttribute(j, path));
+}
 
-  alignAttributes.forEach((path) => {
-    const attributeValue = path.value.value;
-    // Handle JSX attributes that contain expressions like {Alignment.LEFT} or {"left"}
-    if (attributeValue.type === "JSXExpressionContainer") {
-      const { expression } = attributeValue;
+function handleAlignmentAttribute(j: JSCodeshift, path: ASTPath<JSXAttribute>) {
+  const attributeValue = path.value.value;
+  // Handle JSX attributes that contain expressions like {Alignment.LEFT} or {"left"}
+  if (attributeValue.type === "JSXExpressionContainer") {
+    const { expression } = attributeValue;
 
-      // Handle member expressions like Alignment.LEFT
-      if (expression.type === "MemberExpression") {
-        const { property } = expression;
-        // Convert identifier names (LEFT/RIGHT/CENTER) to START/END
-        if (property.type === "Identifier") {
-          convertAlignmentMember(j, path, property);
-        }
+    // Handle member expressions like Alignment.LEFT
+    if (expression.type === "MemberExpression") {
+      const { property } = expression;
+      // Convert identifier names (LEFT/RIGHT/CENTER) to START/END
+      if (property.type === "Identifier") {
+        convertAlignmentMember(j, path, property);
       }
-
-      // Handle string literals wrapped in curly braces like {"left"}
-      if (expression.type === "StringLiteral") {
-        convertAlignmentString(j, path, expression);
-      }
-      // Handle direct string literals like align="left"
-    } else if (attributeValue.type === "StringLiteral") {
-      convertAlignmentString(j, path, attributeValue);
     }
-  });
+
+    // Handle string literals wrapped in curly braces like {"left"}
+    if (expression.type === "StringLiteral") {
+      convertAlignmentString(j, path, expression);
+    }
+    // Handle direct string literals like align="left"
+  } else if (attributeValue.type === "StringLiteral") {
+    convertAlignmentString(j, path, attributeValue);
+  }
 }
 
 function convertAlignmentMember(
