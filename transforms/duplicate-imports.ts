@@ -27,10 +27,10 @@ export default function transformer(file: FileInfo, api: API) {
     // Remove all existing @blueprintjs/core import declarations
     blueprintCoreImports.remove();
 
-    // Sort specifiers alphabetically
+    // Sort specifiers alphabetically by local name
     specifiers.sort((a, b) => {
-      const aName = a.specifier.imported.name;
-      const bName = b.specifier.imported.name;
+      const aName = a.specifier.local?.name || a.specifier.imported.name;
+      const bName = b.specifier.local?.name || b.specifier.imported.name;
       return aName.localeCompare(bName);
     });
 
