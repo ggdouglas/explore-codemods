@@ -2,7 +2,7 @@ jest.autoMockOff();
 
 import { defineTest } from "jscodeshift/dist/testUtils";
 
-const name = "button-outline";
+const name = "variant";
 const fixtures = ["button"] as const;
 
 describe(name, () => {
