@@ -9,20 +9,38 @@ import {
 
 // TODO: Handle attributes with inline comments
 
+const components = [
+  "AnchorButton",
+  "Button",
+  "ButtonGroup",
+  "Checkbox",
+  "CompoundTag",
+  "FileInput",
+  "InputGroup",
+  "Menu",
+  "NumericInput",
+  "Radio",
+  "SegmentedControl",
+  "Switch",
+  "Tabs",
+  "Tag",
+  "TagInput",
+  "TextArea",
+];
+
 export default function transformer(file: FileInfo, api: API) {
   const j = api.jscodeshift;
   const root = j(file.source);
 
-  const buttons = root.findJSXElements("Button");
-  const anchorButtons = root.findJSXElements("AnchorButton");
-
-  buttons.forEach((path) => transformButton(j, path));
-  anchorButtons.forEach((path) => transformButton(j, path));
+  for (const component of components) {
+    const elements = root.findJSXElements(component);
+    elements.forEach((path) => transformComponent(j, path));
+  }
 
   return root.toSource();
 }
 
-function transformButton(j: JSCodeshift, path: ASTPath<JSXElement>) {
+function transformComponent(j: JSCodeshift, path: ASTPath<JSXElement>) {
   const smallAttr = findAttribute(j, path, "small");
   const largeAttr = findAttribute(j, path, "large");
 
