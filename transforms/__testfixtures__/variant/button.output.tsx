@@ -15,7 +15,7 @@ function ExampleC() {
 
 function ExampleD() {
   const isOutlined = true;
-  return <Button variant={isOutlined ? "outlined" : undefined}>test</Button>;
+  return <Button variant={isOutlined ? "outlined" : "solid"}>test</Button>;
 }
 
 function ExampleE() {
@@ -32,7 +32,7 @@ function ExampleG() {
 
 function ExampleH() {
   const isMinimal = true;
-  return <Button variant={isMinimal ? "minimal" : undefined}>test</Button>;
+  return <Button variant={isMinimal ? "minimal" : "solid"}>test</Button>;
 }
 
 function ExampleI() {
@@ -42,5 +42,9 @@ function ExampleI() {
 function ExampleJ() {
   const isMinimal = true;
   const isOutlined = true;
-  return <Button variant={isOutlined ? "outlined" : undefined}>test</Button>;
+  return <Button variant={isOutlined ? "outlined" : isMinimal ? "minimal" : "solid"}>test</Button>;
+}
+
+function ExampleK() {
+  return <Button variant="minimal">test</Button>;
 }

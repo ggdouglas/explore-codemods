@@ -26,9 +26,18 @@ function transform(j: JSCodeshift, path: ASTPath<JSXElement>) {
   const minimalAttr = findAttribute(j, path, "minimal");
   const outlinedAttr = findAttribute(j, path, "outlined");
 
+  // both  minimal and outlined are present
   if (minimalAttr.length > 0 && outlinedAttr.length > 0) {
-    transformToVariantAttribute(j, outlinedAttr.get(), "outlined");
-    j(minimalAttr.get()).remove();
+    const outlinedValue = outlinedAttr.get().value.value.expression.value;
+    const minimalValue = minimalAttr.get().value.value.expression.value;
+
+    if (outlinedValue) {
+      transformToVariantAttribute(j, outlinedAttr.get(), "outlined");
+      j(minimalAttr.get()).remove();
+    } else if (minimalValue) {
+      transformToVariantAttribute(j, minimalAttr.get(), "minimal");
+      j(outlinedAttr.get()).remove();
+    }
     return;
   }
   if (minimalAttr.length > 0) {
@@ -78,20 +87,20 @@ function transformToVariantAttribute(
       return;
     }
 
-    // case 3: attribute is set with an expression (e.g. `small={isSmall}` or `large={isLarge}`)
+    // case 3: attribute is set with an expression (e.g. `minimal={isMinimal}` or `outlined={isOutlined}`)
     if (expression.type !== "JSXEmptyExpression") {
       path.value.name = j.jsxIdentifier("variant");
       path.value.value = j.jsxExpressionContainer(
         j.conditionalExpression(
           expression,
           j.stringLiteral(variant),
-          j.identifier("undefined")
+          j.stringLiteral("solid")
         )
       );
       return;
     }
   }
 
-  // case 4: attribute is set with something else (e.g. `small={false}` or `large={false}`)
+  // case 4: attribute is set with something else (e.g. `minimal={false}` or `outlined={false}`)
   j(path).remove();
 }

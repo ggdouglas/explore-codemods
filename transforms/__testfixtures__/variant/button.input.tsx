@@ -44,3 +44,7 @@ function ExampleJ() {
   const isOutlined = true;
   return <Button minimal={isMinimal} outlined={isOutlined}>test</Button>;
 }
+
+function ExampleK() {
+  return <Button minimal={true} outlined={false}>test</Button>;
+}
